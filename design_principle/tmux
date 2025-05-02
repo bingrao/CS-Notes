@@ -1,0 +1,107 @@
+Absolutely! Here's a quick-start guide to using tmux, focused on core usage and common suggested configurations for convenience.
+
+🧭 Quick Start: tmux Basics
+✅ What is tmux?
+tmux is a terminal multiplexer. It lets you:
+
+Run multiple terminal sessions in one window.
+
+Detach and reattach to sessions even after disconnection.
+
+Split your screen into multiple panes.
+
+⚙️ Installation
+bash
+Copy
+Edit
+# Ubuntu/Debian
+sudo apt install tmux
+
+# macOS (via Homebrew)
+brew install tmux
+🚀 Basic Usage
+Start a new session
+bash
+Copy
+Edit
+tmux
+Start a named session
+bash
+Copy
+Edit
+tmux new -s mysession
+Detach from session (leave it running)
+Ctrl + b, then press d
+
+Reattach to a session
+bash
+Copy
+Edit
+tmux attach -t mysession
+List sessions
+bash
+Copy
+Edit
+tmux ls
+Kill a session
+bash
+Copy
+Edit
+tmux kill-session -t mysession
+🔲 Pane Management
+All commands start with Ctrl + b, then:
+
+Action	Key
+Split pane vertically	%
+Split pane horizontally	"
+Move between panes	Arrow keys or o
+Resize panes	Ctrl + b, then Ctrl + Arrow (after config tweak)
+Close a pane	exit or Ctrl + d
+
+🗂 Window Management
+Action	Command
+Create new window	c
+Switch to window #n	n (e.g., 0, 1, 2, …)
+Next/Prev window	n / p
+Rename window	,
+Close window	&
+
+🛠️ Suggested .tmux.conf
+Add this to ~/.tmux.conf to improve usability:
+
+tmux
+Copy
+Edit
+# Easier pane resizing
+bind -r Left resize-pane -L 5
+bind -r Right resize-pane -R 5
+bind -r Up resize-pane -U 5
+bind -r Down resize-pane -D 5
+
+# Use mouse for pane/window selection
+set -g mouse on
+
+# Set scrollback buffer
+set -g history-limit 10000
+
+# Start window index at 1
+set -g base-index 1
+setw -g pane-base-index 1
+
+# Better status bar
+set -g status-bg black
+set -g status-fg white
+set -g status-left '[#S]'
+set -g status-right '%Y-%m-%d %H:%M'
+Reload with:
+
+bash
+Copy
+Edit
+tmux source-file ~/.tmux.conf
+🧠 Bonus Tips
+To scroll, enter copy mode: Ctrl + b, then [, then use arrow or PgUp.
+
+To copy text in copy mode, press Space to start selection, Enter to copy.
+
+Would you like a cheat sheet image or printable PDF version of this?
