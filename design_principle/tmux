@@ -1,3 +1,79 @@
+Great idea — you want to avoid duplicating commands that were already in your global ~/.bash_history when merging the session-specific file back in.
+
+Here’s how to do that cleanly:
+
+✅ Goal:
+On tmux session exit, append only new commands (added during that session) from $HISTFILE → ~/.bash_history.
+
+🛠️ Updated tmux-launch.sh (dedup-aware merging)
+bash
+Copy
+Edit
+#!/bin/bash
+
+SESSION_NAME="$1"
+shift
+
+# Fallback session name
+if [[ -z "$SESSION_NAME" ]]; then
+    SESSION_NAME="tmux_$(date +%s)"
+fi
+
+HIST_TMUX_FILE="$HOME/.bash_history_tmux_$SESSION_NAME"
+GLOBAL_HIST="$HOME/.bash_history"
+
+# Record line count before session (marker)
+PREV_LINE_COUNT=$(wc -l < "$GLOBAL_HIST" 2>/dev/null || echo 0)
+
+# Seed the tmux-specific file
+if [[ -f "$GLOBAL_HIST" ]]; then
+    cat "$GLOBAL_HIST" > "$HIST_TMUX_FILE"
+fi
+
+# Launch session and set HISTFILE env
+tmux new-session -d -s "$SESSION_NAME"
+tmux set-environment -g HISTFILE "$HIST_TMUX_FILE"
+tmux send-keys -t "$SESSION_NAME" "bash" C-m
+tmux attach -t "$SESSION_NAME"
+
+# === AFTER SESSION EXIT ===
+
+# Get new lines added during session (lines not in original)
+if [[ -f "$HIST_TMUX_FILE" ]]; then
+    NEW_COMMANDS=$(tail -n +"$((PREV_LINE_COUNT + 1))" "$HIST_TMUX_FILE")
+    if [[ -n "$NEW_COMMANDS" ]]; then
+        echo "# Merged from $HIST_TMUX_FILE @ $(date)" >> "$GLOBAL_HIST"
+        echo "$NEW_COMMANDS" >> "$GLOBAL_HIST"
+    fi
+    rm -f "$HIST_TMUX_FILE"
+    echo "✔️ New commands from $SESSION_NAME merged into ~/.bash_history"
+fi
+🔍 Key Points
+We count lines in the global file before starting tmux
+
+After tmux exits, we tail only new lines from the tmux history
+
+These new lines are appended once to avoid duplication
+
+📂 Optional: Keep a backup
+Before merging, you can back up the history:
+
+bash
+Copy
+Edit
+cp ~/.bash_history ~/.bash_history.bak_$(date +%F_%H%M)
+Would you like this packaged into an installable script (e.g., tmux-session command) or integrated into a shell function for quick reuse?
+
+
+
+
+
+
+
+
+
+
+
 You're absolutely right again — and this is a key subtlety of using tmux with HISTFILE.
 
 When you do:
