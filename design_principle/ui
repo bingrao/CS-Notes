@@ -1,0 +1,83 @@
+Absolutely! Here's how to enhance your Dashboard so that:
+
+✅ The comment is shown in the table for each task.
+
+✅ Users can filter tasks by keyword (in any field including comment, status, file names, etc.)
+
+✅ 1. Update the Dashboard Table to Include Comments
+In dashboard.html:
+A. Add a new <th> for the Comment:
+html
+Copy
+Edit
+<th>Comment</th>
+B. Add a new <td> in the row for each task:
+html
+Copy
+Edit
+<td>{{ task.comment or '' }}</td>
+Now your table structure might look like:
+
+html
+Copy
+Edit
+<thead>
+  <tr>
+    <th>Task ID</th>
+    <th>Submitted Time</th>
+    <th>Input Metadata</th>
+    <th>Using RAG</th>
+    <th>Status</th>
+    <th>Result</th>
+    <th>Log File</th>
+    <th>Comment</th>
+    <th>Action</th>
+  </tr>
+</thead>
+✅ 2. Add a Keyword Filter Input Box (Client-Side)
+Place this above the table:
+
+html
+Copy
+Edit
+<input type="text" id="taskFilterInput" placeholder="Filter tasks..." style="margin-bottom: 10px; padding: 5px; width: 300px;">
+✅ 3. Add JavaScript to Filter Rows Based on Keyword
+Add this at the end of the file (below the table):
+
+html
+Copy
+Edit
+<script>
+  const filterInput = document.getElementById("taskFilterInput");
+  filterInput.addEventListener("input", function () {
+    const keyword = this.value.toLowerCase();
+    const rows = document.querySelectorAll("table tbody tr");
+
+    rows.forEach(row => {
+      const rowText = row.textContent.toLowerCase();
+      row.style.display = rowText.includes(keyword) ? "" : "none";
+    });
+  });
+</script>
+✅ Final Output
+✏️ Users see the comment for each task in the dashboard.
+
+🔍 Typing in the filter box will instantly hide/show rows based on matches in:
+
+Task ID
+
+Status
+
+RAG selection
+
+File names
+
+🔥 Comments!
+
+Let me know if you'd like to:
+
+Highlight matching text
+
+Add column-specific filters (e.g., filter only by comment)
+
+Add sorting or pagination to improve handling of large task lists
