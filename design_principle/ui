@@ -1,3 +1,21 @@
+🔍 This approach uses -webkit-line-clamp to truncate to 2 lines (multi-line ellipsis). It’s well-supported in modern browsers.
+
+<style>
+  .comment-cell {
+    max-width: 250px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;     /* Limit to 2 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    line-height: 1.2em;
+    height: 2.4em;
+    cursor: help;
+  }
+</style>
+
+
 # Update dashboard.html
 ✅ Enhancements Included:
 📌 Comment column added with smart truncation and tooltip (title).
