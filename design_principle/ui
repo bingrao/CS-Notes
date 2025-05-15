@@ -40,7 +40,12 @@ Place this above the table:
 html
 Copy
 Edit
-<input type="text" id="taskFilterInput" placeholder="Filter tasks..." style="margin-bottom: 10px; padding: 5px; width: 300px;">
+
+<div style="display: flex; align-items: center; margin-bottom: 10px;">
+  <label for="taskFilterInput" style="margin-right: 10px; font-weight: bold;">Filter Task:</label>
+  <input type="text" id="taskFilterInput" placeholder="Enter keyword..." style="padding: 5px; width: 300px;">
+</div>
+
 ✅ 3. Add JavaScript to Filter Rows Based on Keyword
 Add this at the end of the file (below the table):
 
