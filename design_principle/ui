@@ -1,3 +1,123 @@
+# Update dashboard.html
+✅ Enhancements Included:
+📌 Comment column added with smart truncation and tooltip (title).
+
+📥 Emoji used for download links (input, result, log).
+
+🔍 Filter Task input styled inline above the table.
+
+🎯 Centered alignment for result and log file columns.
+
+
+{% extends "base.html" %}
+{% block content %}
+<h2>Dashboard</h2>
+<p>Logged in as: {{ session.username }} | Tenant: {{ session.tenant }}</p>
+<a href="{{ url_for('create_task') }}">Create New Task</a> | 
+<a href="{{ url_for('search_docs') }}">Search Documents</a>
+
+<!-- Filter Box -->
+<div style="display: flex; align-items: center; margin: 15px 0;">
+  <label for="taskFilterInput" style="margin-right: 10px; font-weight: bold;">Filter Task:</label>
+  <input type="text" id="taskFilterInput" placeholder="Enter keyword..." style="padding: 5px; width: 300px;">
+</div>
+
+<!-- Task Table -->
+<table border="1" cellspacing="0" cellpadding="5">
+  <thead>
+    <tr>
+      <th>Task ID</th>
+      <th>Submitted Time</th>
+      <th>Input Metadata</th>
+      <th>Using RAG</th>
+      <th>Status</th>
+      <th style="text-align: center;">Result</th>
+      <th style="text-align: center;">Log File</th>
+      <th>Comment</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for task in tasks %}
+      <tr>
+        <td>
+          <a href="{{ url_for('task', task_id=task.task_id) }}">{{ task.task_id }}</a>
+        </td>
+        <td>
+          {{ task.submitted_time.strftime("%Y-%m-%d %H:%M:%S") }}
+        </td>
+        <td>
+          {% if task.filename %}
+            📥 <a href="{{ url_for('download', folder=task.username ~ '/' ~ task.task_id, filename=task.filename) }}">{{ task.filename }}</a>
+          {% else %}
+            N/A
+          {% endif %}
+        </td>
+        <td>{{ task.yes_no }}</td>
+        <td>{{ task.status }}</td>
+        <td style="text-align: center;">
+          {% if task.result_file %}
+            📥 <a href="{{ url_for('download', folder=task.username ~ '/' ~ task.task_id, filename=task.result_file) }}">{{ task.result_file }}</a>
+          {% else %}
+            N/A
+          {% endif %}
+        </td>
+        <td style="text-align: center;">
+          {% set log_filename = 'task_' ~ task.task_id ~ '.log' %}
+          📥 <a href="{{ url_for('download', folder=task.username ~ '/' ~ task.task_id, filename=log_filename) }}">{{ log_filename }}</a>
+        </td>
+        <td class="comment-cell" title="{{ task.comment or '' }}">
+          {{ task.comment or '' }}
+        </td>
+        <td>
+          {% if task.status == 'Pending' %}
+            <form method="POST" action="{{ url_for('cancel_task', task_id=task.task_id) }}" style="display:inline;">
+              <button type="submit">Kill Task</button>
+            </form>
+          {% else %}
+            N/A
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr>
+        <td colspan="9">No tasks yet.</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- Back link -->
+<br>
+<a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+
+<!-- Styling for truncated comments -->
+<style>
+  .comment-cell {
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
+
+<!-- Keyword Filtering Script -->
+<script>
+  const filterInput = document.getElementById("taskFilterInput");
+  filterInput.addEventListener("input", function () {
+    const keyword = this.value.toLowerCase();
+    const rows = document.querySelectorAll("table tbody tr");
+
+    rows.forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(keyword) ? "" : "none";
+    });
+  });
+</script>
+{% endblock %}
+
+
+
 Absolutely! Here's how to enhance your Dashboard so that:
 
 ✅ The comment is shown in the table for each task.
