@@ -1,0 +1,1113 @@
+Absolutely! Designing a code review system powered by a large language model (LLM) can be a powerful way to assist developers, enforce best practices, and catch potential bugs early. Below is a comprehensive breakdown of how you might structure this project, including its goals, architecture, components, and considerations.
+
+🔧 Project Name
+LLM-Based Code Review Assistant
+
+🎯 Goals
+Automated code review for style, performance, security, and correctness.
+
+Provide actionable suggestions with context and examples.
+
+Support for multiple languages (e.g., Python, JavaScript, etc.)
+
+Integrate with developer workflows (e.g., GitHub PRs, VS Code, CLI).
+
+Optionally, allow fine-tuning or rule configuration for teams.
+
+🧱 System Architecture Overview
+1. Input Layer
+Accepts code in various forms:
+
+Pull request diff
+
+Full file
+
+Function/class snippet
+
+CLI/file upload
+
+2. Preprocessing
+Strip comments (optional)
+
+Normalize indentation
+
+Detect language
+
+Break large files into chunks if needed
+
+3. LLM Interface
+Prompt templates tailored to:
+
+Style review
+
+Bug detection
+
+Security checks
+
+Refactoring recommendations
+
+Use OpenAI, Anthropic, or local models (like Code Llama, StarCoder, etc.)
+
+4. Postprocessing
+Format LLM output:
+
+Inline comments
+
+Summary table of issues
+
+Suggested fixes
+
+5. Output Layer
+Rendered in:
+
+Markdown (for GitHub PRs)
+
+Inline code annotations
+
+HTML dashboard
+
+VS Code extension
+
+🧠 Prompt Engineering Examples
+🎨 Style Review Prompt
+text
+Copy
+Edit
+You are a senior developer. Review the following Python function for PEP8 and naming conventions. Explain suggestions clearly.
+
+```python
+def clc(a,b):
+ return a+b
+r
+Copy
+Edit
+
+### 🐞 *Bug Detection Prompt*
+```text
+Review this JavaScript code for potential runtime errors or logical bugs. Suggest improvements if needed.
+
+```javascript
+function divide(a, b) {
+  return a / b;
+}
+pgsql
+Copy
+Edit
+
+### 🔒 *Security Prompt*
+```text
+You are a security expert. Check this code for common security vulnerabilities like SQL injection, XSS, and unsafe deserialization.
+
+```python
+query = f"SELECT * FROM users WHERE name = '{user_input}'"
+yaml
+Copy
+Edit
+
+---
+
+## 🔁 **Integration Targets**
+- ✅ GitHub Actions bot for PRs
+- ✅ VS Code Extension
+- ✅ CLI tool
+- ✅ Web app dashboard
+- Optional: Slack bot / JIRA integration
+
+---
+
+## 📦 **Tech Stack Suggestions**
+
+| Component           | Technology                             |
+|--------------------|-----------------------------------------|
+| LLM                | OpenAI GPT-4 / Claude / StarCoder       |
+| Backend API        | FastAPI / Flask                         |
+| Frontend (optional)| React / Next.js                         |
+| CI Integration     | GitHub Actions / GitLab CI              |
+| Database (optional)| SQLite / PostgreSQL (for history/logs)  |
+
+---
+
+## 📋 **Sample Use Cases**
+1. **PR comment bot**: Auto-comments on pull requests with LLM review results.
+2. **Security scanning CLI**: A command-line tool to scan local files.
+3. **Code refactor coach**: Offers improved versions of messy functions.
+4. **Educational tool**: Teaches junior devs by showing “what’s wrong” and why.
+
+---
+
+## 📌 **Challenges & Mitigations**
+
+| Challenge                       | Solution                                                                 |
+|--------------------------------|--------------------------------------------------------------------------|
+| LLM hallucination              | Add rules/filters and confidence scoring                                |
+| Context window limitations     | Chunk code or use function-level review                                 |
+| Language-specific analysis     | Use different prompts/models for different languages                    |
+| Performance cost (API)         | Cache results, use lower-cost models for quick checks                   |
+| Privacy concerns with code     | Mask sensitive data or offer on-prem deployment                         |
+
+---
+
+## 📈 **Potential Extensions**
+- Fine-tuning with team-specific codebase
+- Learning from past PR reviews
+- Chat-style interactive review
+- Integration with static analysis tools (e.g., flake8, eslint)
+
+---
+
+If you'd like, I can help you build out a prototype for one of the components (e.g., a GitHub bot, a CLI tool, or prompt templates). Let me know which part you're most interested in developing first!
+
+
+
+
+
+You said:
+For now, we are focus on python programming language, and want to integrate it into git system, can you help with more design details? 
+
+
+ChatGPT said:
+Updated saved memory
+Great! Focusing on Python and integrating into the Git system gives you a clear, manageable scope. Here's a more detailed project breakdown tailored to that focus:
+
+🛠️ Project Scope
+Objective: Build a Python code review tool powered by an LLM, integrated directly into Git workflows (e.g., via pre-commit hooks, GitHub Actions, or GitLab CI).
+
+📁 System Components
+1. Trigger Layer
+Where and how the review is triggered:
+
+Option	Description
+Pre-commit Hook	Checks staged code before it's committed. Fast, local, but needs setup.
+GitHub Action	Runs on every pull request; posts review comments. Scalable and centralized.
+CLI tool	Developer runs it manually: llm-review my_script.py
+
+2. File Selection Logic
+Only Python files: *.py
+
+Only changed files:
+
+bash
+Copy
+Edit
+git diff --name-only --diff-filter=AM HEAD | grep '\.py$'
+3. Code Chunking
+Extract functions and classes using AST:
+
+python
+Copy
+Edit
+import ast
+
+def extract_functions(code):
+    tree = ast.parse(code)
+    return [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+Optionally, split long functions or modules for LLM input size limits (e.g., 4K tokens).
+
+4. Prompt Design (Python-Specific)
+Customize for Pythonic issues, PEP8, bugs, best practices.
+
+Prompt Example:
+
+text
+Copy
+Edit
+You are a Python expert. Review this function for bugs, anti-patterns, and suggest improvements. Follow PEP8, comment clearly.
+
+```python
+def my_function(x,y):
+  return x+y
+yaml
+Copy
+Edit
+
+---
+
+### 5. **LLM Backend**
+Options:
+- OpenAI (e.g., GPT-4o, GPT-4-turbo)
+- Local models (e.g., Code Llama, StarCoder)
+
+API interface:
+```python
+def query_llm(prompt: str) -> str:
+    # Call to OpenAI or local model
+    ...
+6. Result Formatting
+Markdown for GitHub comments
+
+Summary table of issues:
+
+markdown
+Copy
+Edit
+| Line | Issue Type | Description | Suggested Fix |
+|------|------------|-------------|----------------|
+| 23   | Style      | Missing space after comma | `x, y` |
+7. GitHub Integration
+Use GitHub Actions:
+
+llm-review.yml (workflow):
+
+yaml
+Copy
+Edit
+name: LLM Code Review
+
+on:
+  pull_request:
+    paths:
+      - '**/*.py'
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run LLM Code Review
+        run: |
+          pip install -r requirements.txt
+          python review.py
+8. Commenting Back
+Use GitHub API to leave review comments programmatically:
+
+python
+Copy
+Edit
+from github import Github
+
+g = Github(GITHUB_TOKEN)
+repo = g.get_repo("owner/repo")
+pr = repo.get_pull(PR_NUMBER)
+pr.create_review_comment(body="...", commit_id=..., path=..., position=...)
+⚙️ Optional Features
+Lint-aware fallback (combine with flake8, black, or pylint)
+
+Config file for team rules: .llmreviewrc
+
+“Fix it” button that applies LLM-suggested edits
+
+📌 Development Milestones
+Phase	Feature Set
+MVP	CLI tool + pre-commit hook + basic prompt
+V1	GitHub Action + AST-aware chunking + LLM API
+V2	GitHub comments + config + auto-fix
+
+Would you like me to generate a starter repo structure, example Python code for GitHub integration, or prompt tuning templates next?
+
+
+
+
+
+You said:
+I will assign this project to a summer intern who have 10 weeks, can you help draft plan and milestones for this projects? 
+
+
+ChatGPT said:
+Perfect! Here's a 10-week plan and milestone breakdown for your summer intern to build the Python + Git-integrated LLM Code Review Assistant.
+
+📅 10-Week Internship Plan for LLM-Based Python Code Review Tool
+🧩 Week 0: Pre-intern Setup (Optional)
+You (supervisor) prepare this in advance
+
+Access to GitHub repo / org
+
+OpenAI or API key setup
+
+Example Python codebases for testing
+
+Initial README.md + onboarding notes
+
+🗓️ Weekly Plan & Milestones
+✅ Week 1: Orientation + Project Familiarization
+Goals:
+
+Understand goals, tools, and timelines
+
+Review example Python codebases
+
+Learn how LLMs (GPT/Code Llama) work in reviews
+
+Deliverables:
+
+Write a brief project spec in their own words
+
+Explore simple LLM prompts for code review via playground or API
+
+✅ Week 2: CLI MVP – Code Review by File
+Goals:
+
+Build CLI to analyze .py files
+
+Feed code into LLM, get review suggestions
+
+Tech:
+
+argparse, openai, basic file I/O
+
+Deliverables:
+
+llm-review myfile.py prints LLM review
+
+Prompt v1 with simple style/bug feedback
+
+✅ Week 3: Code Chunking + Prompt Engineering
+Goals:
+
+Parse code into classes/functions
+
+Tune prompts for specific review types (style, bug, refactor)
+
+Tech:
+
+Python ast, tokenize
+
+Prompt template versioning
+
+Deliverables:
+
+Chunked LLM input
+
+Clear, tailored prompts with at least 3 review modes
+
+✅ Week 4: Git Integration – Changed File Detection
+Goals:
+
+Identify changed .py files from Git diff
+
+Apply LLM review only to changed functions/snippets
+
+Tech:
+
+subprocess, gitpython or shell commands
+
+Deliverables:
+
+llm-review runs only on staged/committed changes
+
+✅ Week 5: GitHub Action Integration
+Goals:
+
+Auto-run review on pull request
+
+Use GitHub Actions + review bot
+
+Tech:
+
+GitHub Actions, YAML, GitHub API
+
+Deliverables:
+
+Working .github/workflows/llm-review.yml
+
+Posts results as a PR comment (plain text)
+
+✅ Week 6: Comment Formatting and Summary Output
+Goals:
+
+Improve LLM output readability
+
+Show issues in Markdown table + inline suggestions
+
+Deliverables:
+
+Well-formatted output:
+
+markdown
+Copy
+Edit
+### Issues Found
+| Line | Type | Suggestion |
+|------|------|------------|
+| 12   | Bug  | Handle None input |
+✅ Week 7: Inline PR Comments via GitHub API
+Goals:
+
+Post review suggestions as inline comments
+
+Point to exact lines in code
+
+Tech:
+
+GitHub REST API, PyGithub or raw requests
+
+Deliverables:
+
+Bot comments show up directly on PR diff view
+
+✅ Week 8: Configuration + Extensibility
+Goals:
+
+Add config file for rule preferences
+
+Optional flags: review mode, confidence threshold, max tokens
+
+Tech:
+
+.llmreviewrc, yaml or json config
+
+Deliverables:
+
+llm-review --config myrules.yaml
+
+Config file for prompt mode toggles
+
+✅ Week 9: Testing + Logging
+Goals:
+
+Add error handling and logging
+
+Unit tests for core utilities
+
+Deliverables:
+
+tests/ folder with Pytest
+
+Logs written to file + good failure messages
+
+✅ Week 10: Polishing + Demo + Documentation
+Goals:
+
+Refactor for clarity
+
+Record short demo video
+
+Write usage guide + final report
+
+Deliverables:
+
+README.md, docs/
+
+Intern presentation/demo to team
+
+Optional: Deploy on public GitHub
+
+🧰 Tools Needed
+Area	Tools/Libs
+LLM	OpenAI API / Anthropic
+Git integration	gitpython, subprocess
+PR integration	GitHub Actions + PyGithub
+Parsing	Python ast
+Testing	pytest
+Config	json, yaml, argparse
+
+Would you like me to create a printable version of this plan (PDF/Markdown) or a starter GitHub repo scaffold for your intern?
+
+
+
+
+
+You said:
+For now, let's integrate LLM-based code review into pre-commit hooks, can you help adjust the plan? 
+
+
+ChatGPT said:
+Absolutely! If you're focusing on pre-commit hook integration first, the project can be streamlined to develop a local-first, lightweight tool that fits right into developers' Git workflows.
+
+Here’s the adjusted 10-week internship plan with the focus shifted to building a Python-only, LLM-powered code review tool integrated via Git pre-commit hooks.
+
+🛠️ Project: LLM-Based Python Code Review via Pre-Commit Hook
+🗓️ 10-Week Plan (Intern)
+✅ Week 1: Onboarding & Environment Setup
+Goals:
+
+Understand the project goals
+
+Set up Python, Git, OpenAI API (or alternative), virtualenv
+
+Review pre-commit basics and existing Python review tools (e.g., black, flake8)
+
+Deliverables:
+
+Project spec summary written by intern
+
+Test repo with sample Python code
+
+First test prompt on my_function.py
+
+✅ Week 2: CLI MVP for LLM Review
+Goals:
+
+Build CLI: llm-review myfile.py
+
+Feed entire file into LLM
+
+Display plain text review output in terminal
+
+Deliverables:
+
+CLI tool to run LLM on one .py file
+
+Basic OpenAI API wrapper
+
+First version of prompt for general review (bugs, style)
+
+✅ Week 3: Code Chunking (Function-Level)
+Goals:
+
+Use AST to extract individual functions/classes
+
+Break file into smaller chunks if needed (token limits)
+
+Prompt tuning for better suggestions per chunk
+
+Deliverables:
+
+Function-based code slicing
+
+Smarter prompts (bug/style/refactor mode options)
+
+Configurable review mode via CLI flag
+
+✅ Week 4: Git Diff & Changed Files Detection
+Goals:
+
+Detect staged Python files via git diff --cached
+
+Filter files by extension and Git status
+
+Prepare files for chunked LLM review
+
+Deliverables:
+
+File detector that only picks up .py files added/modified in Git
+
+Integrate with previous review logic
+
+✅ Week 5: Pre-commit Hook Integration
+Goals:
+
+Build and register a working pre-commit hook
+
+Bundle it as a .pre-commit-hooks.yaml and setup.py entry point
+
+Tech:
+
+Use pre-commit
+
+Make the review run as:
+
+bash
+Copy
+Edit
+pre-commit install
+git commit -m "X"  # triggers LLM review
+Deliverables:
+
+Hook script runs llm-review on staged .py files before commit
+
+Prevents commit if critical issues found (configurable)
+
+✅ Week 6: Review Output Formatting
+Goals:
+
+Display issues clearly in terminal
+
+Format as:
+
+text
+Copy
+Edit
+[llm-review] myfile.py:12
+🔸 Possible bug: division by zero not handled.
+💡 Suggestion: add input validation.
+Deliverables:
+
+Easy-to-read CLI output
+
+Optionally output to file or Markdown
+
+✅ Week 7: Config File Support
+Goals:
+
+Support .llmreviewrc or pyproject.toml config block
+
+Options: review mode, confidence threshold, allow/block commit on issue
+
+Deliverables:
+
+Custom rule configuration
+
+Configurable hook behavior (warn vs fail)
+
+✅ Week 8: Logging & Testing
+Goals:
+
+Add structured logging
+
+Write unit tests for:
+
+File change detector
+
+AST chunking
+
+Prompt construction
+
+Deliverables:
+
+tests/ directory with pytest
+
+Logs for prompt/input/output per file
+
+✅ Week 9: Polish, Refactor, Packaging
+Goals:
+
+Package the tool for PyPI/local install
+
+Add CLI help text, usage examples
+
+Polish hook registration experience
+
+Deliverables:
+
+setup.py, README.md, example config
+
+pre-commit hook tested in a real repo
+
+✅ Week 10: Final Demo & Documentation
+Goals:
+
+Write full documentation
+
+Run internal demo and get feedback
+
+Final polish + retrospective
+
+Deliverables:
+
+README.md with install/use/test instructions
+
+Demo video or live walkthrough
+
+Intern summary report
+
+🔧 Example CLI Command
+bash
+Copy
+Edit
+llm-review --mode=bug --max-tokens=1024 --strict .  # runs on all staged .py files
+🧰 Tools & Dependencies
+Area	Tools
+LLM	openai, anthropic, or ollama
+Git integration	gitpython, subprocess
+Hook manager	pre-commit
+Code parsing	Python ast, tokenize
+Testing	pytest
+Config	json, yaml, or toml
+
+Would you like me to generate:
+
+A starter GitHub repo with this plan scaffolded?
+
+Sample pre-commit hook YAML and Python entrypoint?
+
+A sample prompt file for different review modes?
+
+Let me know what support you'd like next!
+
+
+
+
+
+You said:
+For each week, can you give me more details about implementation and technical parts? 
+
+
+ChatGPT said:
+Absolutely! Here's a week-by-week technical breakdown of your 10-week LLM-based Python code review tool project, focusing on pre-commit hook integration. Each week includes objectives, technical steps, libraries/tools, and concrete deliverables.
+
+🗓️ Detailed Weekly Technical Plan
+✅ Week 1: Onboarding & Setup
+Goals:
+
+Understand LLMs, OpenAI API, Git basics, pre-commit hooks.
+
+Technical Steps:
+
+Set up Python virtual environment
+
+Install dependencies: openai, pre-commit, gitpython
+
+Create llm_review/ folder structure
+
+Test OpenAI call with a simple hardcoded prompt
+
+Deliverables:
+
+hello.py reviewed by LLM using playground or API
+
+README.md draft with project scope
+
+✅ Week 2: CLI MVP – Review One Python File
+Goals:
+
+Build a CLI tool: run code through LLM, get text output
+
+Technical Steps:
+
+Use argparse or click to build CLI
+
+Load file content → build prompt → send to OpenAI → print response
+
+Prompt template with {code} placeholder
+
+Add basic error handling (timeouts, API errors)
+
+Example:
+
+bash
+Copy
+Edit
+llm-review path/to/file.py
+Deliverables:
+
+cli.py with working CLI
+
+Prompt template saved in prompts/
+
+✅ Week 3: Code Chunking Using AST
+Goals:
+
+Split code into individual functions/classes for review
+
+Technical Steps:
+
+Use ast.parse() to walk Python syntax tree
+
+Extract function/class nodes and map to line numbers
+
+Build a list: (node.name, code_str, start_line, end_line)
+
+Limit token count per chunk
+
+Libraries:
+
+ast, textwrap, tiktoken (for token counting)
+
+Deliverables:
+
+chunker.py with extract_functions(file_path)
+
+Improved CLI that prints LLM review per function
+
+✅ Week 4: Git Integration
+Goals:
+
+Detect staged Python files to review
+
+Technical Steps:
+
+Run git diff --cached --name-only --diff-filter=ACM
+
+Filter .py files
+
+Pass filtered file list into the LLM review CLI
+
+Libraries:
+
+subprocess or gitpython
+
+Deliverables:
+
+git_utils.py with get_staged_py_files()
+
+CLI auto-runs on only staged .py files
+
+✅ Week 5: Pre-commit Hook Integration
+Goals:
+
+Wrap CLI in a Git hook that runs before commit
+
+Technical Steps:
+
+Create entry.py entrypoint script
+
+Create .pre-commit-hooks.yaml:
+
+yaml
+Copy
+Edit
+- id: llm-review
+  name: LLM Code Review
+  entry: python3 llm_review/entry.py
+  language: system
+  types: [python]
+Add to .pre-commit-config.yaml in target repo
+
+Deliverables:
+
+Pre-commit hook runs LLM review and blocks commit if issues found
+
+✅ Week 6: Review Output Formatting
+Goals:
+
+Make CLI output readable and useful
+
+Technical Steps:
+
+For each chunk reviewed:
+
+Include file name, line number, suggestion, and type (style/bug)
+
+Use colorama for terminal color output
+
+Allow --output markdown option
+
+Deliverables:
+
+Output:
+
+text
+Copy
+Edit
+🔍 [foo.py:23] ❗ Potential bug: divide by zero
+💡 Suggestion: Add input validation
+Markdown option (for CI logging)
+
+✅ Week 7: Configuration Support
+Goals:
+
+Allow users to configure review settings
+
+Technical Steps:
+
+Add --config config.yaml to CLI
+
+Parse config for:
+
+review_mode: bug/style/refactor
+
+block_commit: true/false
+
+max_tokens, model, etc.
+
+Load defaults from pyproject.toml or .llmreviewrc
+
+Deliverables:
+
+config.py with config loader
+
+Configurable review behavior
+
+✅ Week 8: Logging and Testing
+Goals:
+
+Add structured logging and basic tests
+
+Technical Steps:
+
+Use logging module with rotating file handler
+
+Log API calls, file names, prompt content, and response
+
+Use pytest to test:
+
+AST chunking
+
+Git diff logic
+
+Prompt formatting
+
+Deliverables:
+
+logs/review.log
+
+tests/ directory with 3–5 unit tests
+
+✅ Week 9: Packaging and Polish
+Goals:
+
+Refactor for clarity and release
+
+Technical Steps:
+
+setup.py or pyproject.toml for local install
+
+Add CLI --help, --dry-run, --strict
+
+Validate token limits
+
+Clean up duplicated logic
+
+Deliverables:
+
+Installable tool: pip install .
+
+llm-review usable as a command line tool or hook
+
+✅ Week 10: Final Demo and Documentation
+Goals:
+
+Final wrap-up and presentation
+
+Technical Steps:
+
+Write full usage docs
+
+Create demo repo and record video or script walkthrough
+
+Write intern report: lessons learned, ideas for V2
+
+Deliverables:
+
+Final README.md
+
+Usage examples: CLI, pre-commit, config
+
+Optional: deploy on GitHub and share with team
+
+Would you like:
+
+A pre-filled starter repo (CLI, chunker, hook templates)?
+
+Help drafting the base prompt templates?
+
+Intern-facing checklist per week?
+
+
+
+
+
+You said:
+Please implement it
+
+
+ChatGPT said:
+Llm Precommit Review
+✅ Your LLM-based Python code review tool for pre-commit hooks is now implemented.
+
+🗂️ Key Features Included:
+AST-based function chunking
+
+OpenAI GPT-4 integration
+
+Git-staged .py file detection
+
+Terminal-friendly output
+
+Blocks commit if review detects issues
+
+Logs everything in logs/review.log
+
+✅ Next Steps for Integration:
+Set up .pre-commit-hooks.yaml in your repo:
+
+yaml
+Copy
+Edit
+- id: llm-review
+  name: LLM Code Review
+  entry: python llm_review.py
+  language: system
+  types: [python]
+Configure .pre-commit-config.yaml:
+
+yaml
+Copy
+Edit
+repos:
+  - repo: local
+    hooks:
+      - id: llm-review
+Install the pre-commit hook:
+
+bash
+Copy
+Edit
+pre-commit install
+Would you like me to add the YAML files and CLI documentation next?
+
+
+
+
+
+You said:
+Thanks for that, please give me instructions how to config pre-commit hooks? 
+
+
+ChatGPT said:
+You're welcome! Here's a step-by-step guide to configure and use your LLM-based Python code review with the pre-commit framework:
+
+✅ Step-by-Step: Configure pre-commit Hooks for LLM Review
+1. Install pre-commit (if not already installed)
+bash
+Copy
+Edit
+pip install pre-commit
+2. Create .pre-commit-hooks.yaml (in your repo)
+This file defines your custom hook:
+
+yaml
+Copy
+Edit
+# .pre-commit-hooks.yaml
+- id: llm-review
+  name: LLM Code Review
+  entry: python llm_review.py
+  language: system
+  types: [python]
+3. Create .pre-commit-config.yaml (also in root of your repo)
+This file tells pre-commit to use your local hook:
+
+yaml
+Copy
+Edit
+# .pre-commit-config.yaml
+repos:
+  - repo: local
+    hooks:
+      - id: llm-review
+4. Install the hook locally
+Once both files are set, install the hook into your Git environment:
+
+bash
+Copy
+Edit
+pre-commit install
+You should now see:
+
+sql
+Copy
+Edit
+pre-commit installed at .git/hooks/pre-commit
+5. Test it out!
+Make a change to a .py file and try to commit:
+
+bash
+Copy
+Edit
+git add your_script.py
+git commit -m "Try commit"
+If issues are found, the hook will print LLM feedback and block the commit.
+
+🛠️ Optional: Manual Run
+If you want to run the hook manually, use:
+
+bash
+Copy
+Edit
+pre-commit run --all-files
+Or just run the script directly:
+
+bash
+Copy
+Edit
+python llm_review.py
+🧪 Developer Workflow Summary
+Action	Command
+Install pre-commit	pip install pre-commit
+Install hook	pre-commit install
+Test hook	pre-commit run
+Add file & commit	git add file.py && git commit -m \"msg\"
+
+Would you like me to bundle all of this into a GitHub-ready starter repo zip or provide sample Python files for testing?
+
+
+
+
+
+
+
+
+Tools
+
+
