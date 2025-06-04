@@ -1,3 +1,110 @@
+
+
+
+from flask import redirect, url_for, flash, session
+from app import app, db
+from app.models import User
+
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+def delete_user(user_id):
+    admin_user = User.query.filter_by(username=session.get('username')).first()
+    if not admin_user or admin_user.role != 'admin':
+        flash("Unauthorized action.")
+        return redirect(url_for('login'))
+
+    user_to_delete = User.query.get(user_id)
+    if user_to_delete:
+        db.session.delete(user_to_delete)
+        db.session.commit()
+        flash(f"User '{user_to_delete.username}' has been deleted.")
+    else:
+        flash("User not found.")
+
+    return redirect(url_for('user_manage'))
+
+ Notes:
+This route checks the current user’s role to ensure only an admin can delete users.
+
+It commits the deletion and redirects back to the management page with a flash message.
+
+Let me know if you'd like to:
+
+Prevent deletion of your own account
+
+Soft-delete instead (e.g., mark inactive but retain in DB)
+
+Log deletion actions for auditing
+
+
+
+
+
+{% extends "base.html" %}
+{% block content %}
+<h2>User Management</h2>
+
+{% if current_user.role != 'admin' %}
+  <p>You do not have permission to view this page.</p>
+{% else %}
+
+<h3>Register New User</h3>
+<form method="POST" action="{{ url_for('register_user') }}">
+  <label>Username:</label><br>
+  <input type="text" name="username" required><br><br>
+
+  <label>Password:</label><br>
+  <input type="password" name="password" required><br><br>
+
+  <label>Role:</label><br>
+  <select name="role">
+    <option value="user">User</option>
+    <option value="admin">Admin</option>
+  </select><br><br>
+
+  <button type="submit">Register</button>
+</form>
+
+<hr>
+<h3>Existing Users</h3>
+<table border="1" cellpadding="5">
+  <tr>
+    <th>Username</th>
+    <th>Role</th>
+    <th>Status</th>
+    <th>Created</th>
+    <th>Action</th>
+  </tr>
+  {% for user in users %}
+  <tr>
+    <td>{{ user.username }}</td>
+    <td>{{ user.role }}</td>
+    <td>{{ 'Active' if user.active else 'Inactive' }}</td>
+    <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+    <td>
+      {% if user.active %}
+      <form method="POST" action="{{ url_for('deactivate_user', user_id=user.id) }}" style="display:inline">
+        <button type="submit">Deactivate</button>
+      </form>
+      {% else %}
+        ---
+      {% endif %}
+      <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this user?');">
+        <button type="submit">Delete</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endif %}
+{% endblock %}
+
+
+
+
+
+
+#######3
 ✅ 1. Update Your User Model
 Ensure your model includes role and active:
 
