@@ -94,8 +94,7 @@ Would you like the Alembic migration steps next?
 
 {% if current_user.role != 'admin' %}
   <p>You do not have permission to view this page.</p>
-  {% return %}
-{% endif %}
+{% else %}
 
 <h3>Register New User</h3>
 <form method="POST" action="{{ url_for('register_user') }}">
@@ -142,7 +141,10 @@ Would you like the Alembic migration steps next?
   </tr>
   {% endfor %}
 </table>
+
+{% endif %}
 {% endblock %}
+
 
 
 ===============
