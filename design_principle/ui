@@ -1,3 +1,103 @@
+Absolutely! Here's how to add a Register form directly on your login page, so users can either log in or create a new account on the same screen.
+
+✅ Step-by-Step: Add Registration to Login Page
+🔹 1. Update login.html to include a Register section
+Here’s a merged version of login + register:
+
+html
+Copy
+Edit
+{% extends "base.html" %}
+{% block content %}
+<h2>Login</h2>
+
+<form method="POST" action="{{ url_for('login') }}">
+  <label>Username:</label><br>
+  <input type="text" name="username" required><br><br>
+
+  <label>Password:</label><br>
+  <input type="password" name="password" required><br><br>
+
+  <button type="submit" name="action" value="login">Login</button>
+</form>
+
+<hr>
+
+<h2>Register</h2>
+
+<form method="POST" action="{{ url_for('register') }}">
+  <label>Username:</label><br>
+  <input type="text" name="username" required><br><br>
+
+  <label>Password:</label><br>
+  <input type="password" name="password" required><br><br>
+
+  <button type="submit">Register</button>
+</form>
+{% endblock %}
+🔹 2. Add register() route in routes.py or auth.py
+python
+Copy
+Edit
+from flask import render_template, request, redirect, url_for, flash, session
+from app.models import db, User
+
+@app.route('/register', methods=['POST'])
+def register():
+    username = request.form['username']
+    password = request.form['password']
+
+    existing = User.query.filter_by(username=username).first()
+    if existing:
+        flash("Username already exists.")
+        return redirect(url_for('login'))
+
+    new_user = User(username=username)
+    new_user.set_password(password)
+    db.session.add(new_user)
+    db.session.commit()
+
+    flash("Registration successful. Please log in.")
+    return redirect(url_for('login'))
+🔹 3. Update login() route to check form action
+python
+Copy
+Edit
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST' and request.form.get('action') == 'login':
+        username = request.form['username']
+        password = request.form['password']
+
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            session['username'] = user.username
+            return redirect(url_for('dashboard'))
+        else:
+            flash("Invalid credentials.")
+            return redirect(url_for('login'))
+
+    return render_template('login.html')
+✅ Result
+Your login page shows two forms: Login and Register
+
+New users can register and get redirected to log in
+
+Existing users log in as before
+
+Let me know if you want to:
+
+Automatically log in after registration
+
+Add confirm password or validations
+
+Style the form into two columns or cards
+
+Happy to help!
+
+
+
+
 Yes — using a JSON file to store user credentials (e.g., usernames and passwords) is okay for quick prototypes, but it's not secure or scalable for production. Here's a better design with security, maintainability, and scalability in mind:
 
 ✅ Recommended Approach: Use a SQLite Database + Password Hashing
