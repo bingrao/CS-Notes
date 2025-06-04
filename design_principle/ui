@@ -1,3 +1,160 @@
+✅ 1. Update Your User Model
+Ensure your model includes role and active:
+
+python
+Copy
+Edit
+# models.py
+from app import db
+from werkzeug.security import generate_password_hash, check_password_hash
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    role = db.Column(db.String(20), default='user')  # Add this line
+    active = db.Column(db.Boolean, default=True)     # Add this line
+    created_at = db.Column(db.DateTime, default=db.func.now())
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+✅ 2. Routes for Registration, Deactivation, and Management Page
+In your routes.py:
+
+python
+Copy
+Edit
+from flask import render_template, request, redirect, url_for, flash, session
+from app import app, db
+from app.models import User
+
+def current_user():
+    return User.query.filter_by(username=session.get('username')).first()
+
+@app.route('/user_manage', methods=['GET'])
+def user_manage():
+    user = current_user()
+    if not user or user.role != 'admin':
+        flash("Unauthorized access.")
+        return redirect(url_for('login'))
+    users = User.query.all()
+    return render_template('user_manage.html', users=users, current_user=user)
+
+@app.route('/register_user', methods=['POST'])
+def register_user():
+    user = current_user()
+    if not user or user.role != 'admin':
+        flash("Unauthorized action.")
+        return redirect(url_for('login'))
+
+    username = request.form['username']
+    password = request.form['password']
+    role = request.form.get('role', 'user')
+
+    if User.query.filter_by(username=username).first():
+        flash("Username already exists.")
+        return redirect(url_for('user_manage'))
+
+    new_user = User(username=username, role=role)
+    new_user.set_password(password)
+    db.session.add(new_user)
+    db.session.commit()
+    flash("User registered successfully.")
+    return redirect(url_for('user_manage'))
+
+@app.route('/deactivate_user/<int:user_id>', methods=['POST'])
+def deactivate_user(user_id):
+    user = current_user()
+    if not user or user.role != 'admin':
+        flash("Unauthorized action.")
+        return redirect(url_for('login'))
+
+    target_user = User.query.get(user_id)
+    if target_user:
+        target_user.active = False
+        db.session.commit()
+        flash(f"User {target_user.username} deactivated.")
+    return redirect(url_for('user_manage'))
+🛠 Additional Notes
+current_user() is a simple helper here; you can switch to Flask-Login for more robust session handling.
+
+Don’t forget to migrate your database with Alembic to include the role and active columns.
+
+Would you like the Alembic migration steps next?
+
+
+
+
+{% extends "base.html" %}
+{% block content %}
+<h2>User Management</h2>
+
+{% if current_user.role != 'admin' %}
+  <p>You do not have permission to view this page.</p>
+  {% return %}
+{% endif %}
+
+<h3>Register New User</h3>
+<form method="POST" action="{{ url_for('register_user') }}">
+  <label>Username:</label><br>
+  <input type="text" name="username" required><br><br>
+
+  <label>Password:</label><br>
+  <input type="password" name="password" required><br><br>
+
+  <label>Role:</label><br>
+  <select name="role">
+    <option value="user">User</option>
+    <option value="admin">Admin</option>
+  </select><br><br>
+
+  <button type="submit">Register</button>
+</form>
+
+<hr>
+<h3>Existing Users</h3>
+<table border="1" cellpadding="5">
+  <tr>
+    <th>Username</th>
+    <th>Role</th>
+    <th>Status</th>
+    <th>Created</th>
+    <th>Action</th>
+  </tr>
+  {% for user in users %}
+  <tr>
+    <td>{{ user.username }}</td>
+    <td>{{ user.role }}</td>
+    <td>{{ 'Active' if user.active else 'Inactive' }}</td>
+    <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+    <td>
+      {% if user.active %}
+      <form method="POST" action="{{ url_for('deactivate_user', user_id=user.id) }}" style="display:inline">
+        <button type="submit">Deactivate</button>
+      </form>
+      {% else %}
+        ---
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
+
+
+===============
+
+
+
+
+
+
+
+
+
 Absolutely! Here's how to add a Register form directly on your login page, so users can either log in or create a new account on the same screen.
 
 ✅ Step-by-Step: Add Registration to Login Page
