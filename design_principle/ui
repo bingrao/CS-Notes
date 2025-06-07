@@ -1,3 +1,97 @@
+To show task details in tabs with 50 tasks per tab in your Dashboard page, here’s how to do it:
+
+✅ Step 1: Modify Your Flask Route to Paginate Tasks
+In your dashboard route:
+
+python
+Copy
+Edit
+@app.route('/dashboard')
+def dashboard():
+    user = get_current_user()
+    all_tasks = Task.query.filter_by(user=user.username).order_by(Task.timestamp.desc()).all()
+
+    # Split tasks into chunks of 50
+    chunk_size = 50
+    task_chunks = [all_tasks[i:i + chunk_size] for i in range(0, len(all_tasks), chunk_size)]
+
+    return render_template('dashboard.html', user=user, task_chunks=task_chunks)
+✅ Step 2: Update dashboard.html to Render Tasks in Tabs
+html
+Copy
+Edit
+<h2>Dashboard</h2>
+
+<ul class="nav nav-tabs" id="taskTabs" role="tablist">
+  {% for chunk in task_chunks %}
+    <li class="nav-item" role="presentation">
+      <button class="nav-link {% if loop.first %}active{% endif %}" id="tab-{{ loop.index }}" data-bs-toggle="tab" data-bs-target="#panel-{{ loop.index }}" type="button" role="tab">
+        Tasks {{ (loop.index0 * 50 + 1) }}–{{ (loop.index * 50 if loop.last == false else loop.index0 * 50 + chunk|length) }}
+      </button>
+    </li>
+  {% endfor %}
+</ul>
+
+<div class="tab-content" id="taskTabsContent">
+  {% for chunk in task_chunks %}
+    <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="panel-{{ loop.index }}" role="tabpanel">
+      <table class="table table-bordered mt-3">
+        <thead>
+          <tr>
+            <th>Task ID</th>
+            <th>Submitted</th>
+            <th>Status</th>
+            <th>Input</th>
+            <th>Result</th>
+            <th>Log</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for task in chunk %}
+          <tr>
+            <td>{{ task.id }}</td>
+            <td>{{ task.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>{{ task.status }}</td>
+            <td>
+              {% if task.input_metadata %}
+              <a href="{{ url_for('download_input', task_id=task.id) }}">📥</a>
+              {% endif %}
+            </td>
+            <td>
+              {% if task.result_file %}
+              <a href="{{ url_for('download_result', task_id=task.id) }}">⬇️</a>
+              {% endif %}
+            </td>
+            <td>
+              {% if task.log_file %}
+              <a href="{{ url_for('download_log', task_id=task.id) }}">📜</a>
+              {% endif %}
+            </td>
+            <td>
+              {% if task.status in ['PENDING', 'STARTED'] %}
+              <form method="POST" action="{{ url_for('kill_task', task_id=task.id) }}">
+                <button type="submit">Kill</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endfor %}
+</div>
+✅ Step 3: Add Bootstrap Tabs Script (if not already)
+At the bottom of your page or in base.html:
+
+html
+Copy
+Edit
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
 Here are the Flask backend routes to support:
 
 ✅ 1. Admin Resetting Another User’s Password
